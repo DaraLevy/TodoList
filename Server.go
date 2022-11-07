@@ -37,8 +37,23 @@ func appends(input string) http.Handler { // Creates page on sever
 	return http.HandlerFunc(fn)
 }
 
+func delete(input string) http.Handler {
+	var new_Todo []Todo
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		for _, task := range data.Todos {
+			if task.Item != input {
+				new_Todo = append(new_Todo, task)
+			}
+		}
+		data.Todos = new_Todo
+		tmpl.Execute(w, data)
+	}
+	return http.HandlerFunc(fn)
+}
+
 func main() {
-	fmt.Println("Enter Task:")
+
+	fmt.Println("Append or Delete?:")
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
 	input := scanner.Text()
@@ -48,84 +63,20 @@ func main() {
 
 	fs := http.FileServer(http.Dir("./static"))
 	mux.Handle("/static/", http.StripPrefix("/static/", fs))
-	mux.Handle("/todo", appends(input))
+
+	if input == "Append" {
+		fmt.Println("Enter Task:")
+		scanner = bufio.NewScanner(os.Stdin)
+		scanner.Scan()
+		input = scanner.Text()
+		mux.Handle("/todo", appends(input))
+	} else {
+		fmt.Println("Enter Task:")
+		scanner = bufio.NewScanner(os.Stdin)
+		scanner.Scan()
+		input = scanner.Text()
+		go mux.Handle("/todo", delete(input))
+	}
 
 	log.Fatal(http.ListenAndServe(":9091", mux))
 }
-
-//The code below is just the original test code from the last commit, Doesn't work
-
-//package main
-//
-//import (
-//	_ "fmt"
-//	"github.com/gorilla/mux"
-//	"html/template"
-//	"net/http"
-//)
-//
-//var tmpl *template.Template
-//
-//type Todo struct {
-//	Item string
-//	Done bool
-//}
-//
-//type PageData struct {
-//	Title string
-//	Todos []Todo
-//}
-//
-//var data = PageData{
-//	Title: "Todo List",
-//	Todos: []Todo{},
-//}
-//
-////func todo(w http.ResponseWriter, r *http.Request) {
-////	data = PageData{
-////		Title: "Todo List",
-////		Todos: []Todo{
-////			{Item: "Hi", Done: false},
-////		},
-////	}
-////	tmpl.Execute(w, data)
-////}
-//
-////func createTodo() http.Handler { // Creates page on sever
-////	fn := func(w http.ResponseWriter, r *http.Request) {
-////		data = PageData{
-////			Title: "Todo List",
-////			Todos: []Todo{
-////				{Item: "Go Home", Done: false},
-////			},
-////		}
-////	}
-////	return http.HandlerFunc(fn)
-////}
-//
-//func appendTodo(page PageData, adding Todo) http.Handler { //Currently will probably completely wipe out the old page but we can probably fix that
-//
-//	fn := func(w http.ResponseWriter, r *http.Request) {
-//		page.Todos = append(page.Todos, adding)
-//	}
-//	return http.HandlerFunc(fn)
-//}
-//
-//func CreateTodo(w http.ResponseWriter, r *http.Request) {
-//	data.Todos = append(data.Todos, Todo{"Added", false})
-//	tmpl.Execute(w, data)
-//}
-//
-//func main() {
-//	Router := mux.NewRouter()
-//	tmpl = template.Must(template.ParseFiles("index.gohtml"))
-//
-//	//Router.HandleFunc("/todo-completed", GetCompletedItems).Methods("GET")
-//	//Router.HandleFunc("/todo-incomplete", GetIncompleteItems).Methods("GET")
-//	Router.HandleFunc("/todo", CreateTodo).Methods("POST")
-//
-//	fs := http.FileServer(http.Dir("./static"))
-//	Router.Handle("/static/", http.StripPrefix("/static/", fs))
-//	http.ListenAndServe(":9091", Router)
-//
-//}
