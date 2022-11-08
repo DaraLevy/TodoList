@@ -1,5 +1,8 @@
 package main
 
+//CITE: https://github.com/NerdCademyDev/golang/tree/main/05_http_server
+//DESC: Starter code for the todo list and html, .js and .css files used for todo list server
+
 import (
 	"bufio"
 	"fmt"
@@ -75,7 +78,7 @@ func main() {
 		scanner = bufio.NewScanner(os.Stdin)
 		scanner.Scan()
 		input = scanner.Text()
-		go mux.Handle("/todo", delete(input))
+		mux.Handle("/todo", delete(input))
 	}
 
 	log.Fatal(http.ListenAndServe(":9091", mux))
